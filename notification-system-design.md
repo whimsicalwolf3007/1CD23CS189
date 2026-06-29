@@ -32,3 +32,29 @@ CREATE TABLE notifications (
 );
 
 As data grows to millions of rows, the main problems will be slow queries and disk space so to fix that I would add indexes on student_id and created_at, use pagination in the API so we never fetch all records at once, and also archive old notifications to a separate table after 6 months
+
+
+Stage 3:
+
+Is the query accurate?
+Yes correct. It fetches unread notifications for student 1042 ordered by time
+
+Why is it slow?
+There is no index on studentID or isRead so the database reads all 5 million rows one by one to find the matching ones and thats why it is slow
+
+Fix:
+
+CREATE INDEX idx_student_unread ON notifications(studentID, isRead, createdAt);
+
+Now it directly jumps to the matching rows instead of scanning everything
+
+Is adding indexes on every column a good idea?
+
+No, indexes slow down inserts and updates because every time a new row is added all indexes have to be updated too and only add indexes on columns you actually filter by
+
+Placement notifications in last 7 days:
+
+SELECT DISTINCT studentID
+FROM notifications
+WHERE notificationType = 'Placement'
+AND createdAt >= NOW() - INTERVAL '7 days';
